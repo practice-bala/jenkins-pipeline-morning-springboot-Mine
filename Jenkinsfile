@@ -18,6 +18,12 @@ stages {
             sh 'mvn validate'
             }
         }
+    stage ('Maven Test') {
+        steps {
+            echo "This is Maven Test"
+            sh 'mvn test'
+            }
+        }
     }
 }
 

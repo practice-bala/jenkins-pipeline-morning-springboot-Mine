@@ -1,0 +1,95 @@
+name: PetClinic CI/CD
+
+on: 
+  push:
+    branches: [prod]
+  workflow_dispatch: 
+
+
+jobs:
+  build:
+     name: Build, Test Scan & Push
+     runs-on: ubuntu-latest
+     timeout-minutes: 45
+     permissions:
+         contents: read
+     steps:
+         - name: Checkout
+           uses: actions/checkout@v4
+           with:
+             fetch-depth: 0
+         - name: Setup JDK
+           uses: actions/setup-java@v6
+           with:
+             distribution: temurin
+             java-version: '21'  
+             cache: maven
+         - name: Sonar Analysis
+           env:
+              SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+              SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+           run: |
+               mvn -B verify sonar:sonar \
+               -Dsonar.organization=bkrrajmali \
+               -Dsonar.projectKey=myown-springbootapp \
+               -Dsonar.projectName=myown-springbootapp \
+               -Dsonar.java.binaries=target/classes \
+               -Dsonar.qualitygate.wait=true \
+               -Dsonar.qualitygate.timeout=300
+         - name: Azure Login
+           uses: azure/login@v3
+           with:
+              creds: ${{ secrets.AZURE_CREDENTIALS }}
+         - name: Check Build Output
+           run: ls -la target/
+        
+         - name: LOGIN to ACR
+           run: az acr login --name democontainerreg772
+
+         - name: Set up Docker Buildx
+           uses: docker/setup-buildx-action@v4
+
+         - name: Build and push
+           uses: docker/build-push-action@v7
+           with:
+              context: .
+              push: true
+              tags: democontainerreg772.azurecr.io/springbootapp:latest
+          
+  deploy:
+    name: Deploy to AKS
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+    permissions: 
+      contents: read
+      id-token: write
+    steps:
+         - name: Checkout
+           uses: actions/checkout@v4
+
+         - name: Azure Login
+           uses: azure/login@v3
+           with:
+              creds: ${{ secrets.AZURE_CREDENTIALS }}
+         - name: Set AKS context
+           id: set-context
+           uses: azure/aks-set-context@v3
+           with:
+             resource-group: 'AKS' 
+             cluster-name: 'demoaks'
+         - name: Setup kubectl
+           id: install-kubectl
+           uses: azure/setup-kubectl@v3
+         - name: Deploy to AKS
+           id: deploy-aks
+           uses: Azure/k8s-deploy@v4
+           with:
+              namespace: 'default'
+              manifests: |
+                k8s/sprinboot-deployment.yaml
+              images: democontainerreg772.azurecr.io/springbootapp:latest
+  
+    
+        
+  

@@ -16,7 +16,7 @@ stages {
         }
     stage ('Maven Validate') {
         steps {
-            echo "This is Maven Validate"
+            echo "This is Maven Validate "
             sh 'mvn validate'
             }
         }
@@ -33,5 +33,7 @@ stages {
             }
         }
     }
+
+
 }
 

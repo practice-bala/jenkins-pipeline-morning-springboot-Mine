@@ -11,7 +11,7 @@ stages {
 
     stage ('Checkout From Git') {
         steps {
-            git branch: 'prod', url: 'https://github.com/bkrrajmali/jenkins-pipeline-morning-springboot.git'
+            git branch: 'prod', url: 'https://github.com/practice-bala/jenkins-pipeline-morning-springboot-Mine.git'
             }
         }
     stage ('Maven Validate') {

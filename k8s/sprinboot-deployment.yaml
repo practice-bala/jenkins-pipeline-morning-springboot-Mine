@@ -1,38 +1,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: springboot-app
+  name: mine-springboot-app
   labels:
-    app: springboot-app
+    app: mine-springboot-app
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: springboot-app
+      app: mine-springboot-app
   template:
     metadata:
       labels:
-        app: springboot-app
+        app: mine-springboot-app
     spec:
       containers:
-      - name: springboot-app
-        image: democontainerreg772.azurecr.io/springbootapp:latest
-        ports:
-        - containerPort: 8080
-      imagePullSecrets:
-        - name: acr-auth
+        - name: mine-springboot-app
+          image: "__IMAGE_URI__"
+          ports:
+            - containerPort: 8080
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: springboot-app  
+  name: mine-springboot-app
   labels:
-    app: springboot-app
+    app: mine-springboot-app
 spec:
   type: LoadBalancer
+  selector:
+    app: mine-springboot-app
   ports:
     - port: 80
       targetPort: 8080
-  selector:
-    app: springboot-app
